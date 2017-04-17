@@ -2,7 +2,7 @@ name := "scala-sift"
 
 organization := "com.ploomes"
 
-version := "1.0"
+version := "1.1"
 
 scalaVersion := "2.12.1"
 

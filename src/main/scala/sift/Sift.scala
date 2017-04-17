@@ -15,9 +15,17 @@ case class Sift(query: Map[String, Any]) {
   }
 
   def testQuery(data: Any) : Boolean = {
+
     data match {
       case list: List[Map[String, Any]] =>
-        list.forall(obj => Sift(query).testQuery(obj))
+        query.keySet.forall({
+          case "$in" =>
+            val allowed = query("$in").asInstanceOf[List[Map[String, Any]]]
+            list.exists(item => allowed.exists(q => Sift(q).testQuery(item)))
+          case "$nin" =>
+            val notAllowed = query("$nin").asInstanceOf[List[Map[String, Any]]]
+            !list.exists(item => notAllowed.exists(q => Sift(q).testQuery(item)))
+        })
       case map: Map[String, Any] =>
         query.keySet.forall({
           case "$and" =>
@@ -46,7 +54,7 @@ case class Sift(query: Map[String, Any]) {
               map.get(key).exists(Sift(Map("$eq" -> any)).testQuery)
           }
         })
-      case value @(_:String | _:Int | _:Boolean | _:Double) =>
+      case value @(_:String | _:Int | _:Boolean | _:Double | null) =>
         query.keySet.forall {
           case "$in" => SiftMethods.in(query("$in").asInstanceOf[List[Any]])(List(value))
           case "$nin" => SiftMethods.in(query("$nin").asInstanceOf[List[Any]])(List(value))
@@ -77,7 +85,7 @@ object SiftMethods {
   def nin(notAllowed: List[Any])(all: List[Any]): Boolean = !in(notAllowed)(all)
   def eq(left: Any, right: Any): Boolean = left == right
   def ne(left: Any, right: Any): Boolean = !eq(left, right)
-  def regex(regex: String, value: String): Boolean = regex.r.findAllIn(value).isEmpty
+  def regex(regex: String, value: String): Boolean = regex.r.findAllIn(value).nonEmpty
   def exists(bool: Boolean, value: Any) = if(bool) value != null else value == null
   def gte(left: Double, right: Double) : Boolean = left >= right
   def gt(left: Double, right: Double) = left > right

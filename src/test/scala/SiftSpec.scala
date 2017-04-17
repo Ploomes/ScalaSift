@@ -8,7 +8,14 @@ class SiftSpec extends FlatSpec {
   "$in" should "return true when nested" in {
     val craig: Map[String, Any] = Map("name" -> "Craig", "location" -> "Brazil")
     val query: Boolean = Sift(Map("location" -> Map("$in" -> List("Costa Rica", "Brazil")))).testQuery(craig)
-    //    assert(query)
+    assert(query)
+  }
+  it should "work with Map as well" in {
+    val authors: Map[String, Any] = Map("Authors" -> List(Map("name" -> "Craig", "location" -> "Brazil")))
+//    val queryData = Map("Authors" -> Map("$in" -> List(Map("name" -> "Craig"), Map("name" -> "Jeff"))))
+    val queryData = Map("Authors" -> Map("$in" -> List(Map("name" -> "Craig"))))
+    val query: Boolean = Sift(queryData).testQuery(authors)
+    assert(query)
   }
   "$eq" should "return even when ommited" in {
     val query: Boolean = Sift(Map("Name" -> "José")).testQuery(Map[String, Any]("Name" -> "José", "CPF" -> "2324242"))
